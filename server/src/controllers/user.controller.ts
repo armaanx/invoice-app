@@ -3,6 +3,11 @@ import { userLoginSchema, userRegisterSchema } from "../schema/index.ts";
 import { asyncHandler } from "../utils/asyncHandler.ts";
 import { Request, Response } from "express";
 import { User } from "../models/user.model.ts";
+import jwt from "jsonwebtoken";
+
+interface JwtPayload {
+  _id: string;
+}
 
 const registerUser = asyncHandler(async (req: Request, res: Response) => {
   try {
@@ -116,4 +121,54 @@ const logOutUser = asyncHandler(async (req: Request, res: Response) => {
   }
 });
 
-export { registerUser, loginUser, logOutUser };
+const refreshAccessToken = asyncHandler(async (req: Request, res: Response) => {
+  try {
+    const incomingToken = req.cookies?.refreshToken;
+    if (!incomingToken) {
+      return res.status(401).json({ message: "Unauthorized Request" });
+    }
+
+    const decodedToken = jwt.verify(
+      incomingToken,
+      process.env.REFRESH_TOKEN_SECRET!
+    ) as JwtPayload;
+
+    if (!decodedToken) {
+      return res.status(401).json({ message: "Unauthorized Request" });
+    }
+
+    const user = await User.findById(decodedToken._id).select("-password");
+
+    if (!user) {
+      return res.status(401).json({ message: "Invalid Refresh Token" });
+    }
+
+    if (incomingToken !== user.refreshToken) {
+      return res.status(401).json({ message: "Invalid Refresh Token" });
+    }
+
+    const accessToken = user.generateAccessToken();
+    const newRefreshToken = user.generateRefreshToken();
+    const options = {
+      httpOnly: true,
+      secure: true,
+    };
+    return res
+      .status(200)
+      .cookie("accessToken", accessToken, options)
+      .cookie("refreshToken", newRefreshToken, options)
+      .json({
+        accessToken,
+        refreshToken: newRefreshToken,
+        message: "Access Token refreshed successfully",
+      });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(401).json({ message: err.message });
+    } else {
+      res.status(401).json({ message: "Something went wrong" });
+    }
+  }
+});
+
+export { registerUser, loginUser, logOutUser, refreshAccessToken };
