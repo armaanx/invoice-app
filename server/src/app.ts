@@ -8,4 +8,8 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
+//routes
+import userRouter from "./routes/user.routes.ts";
+app.use("/api/auth", userRouter);
+
 export { app };
