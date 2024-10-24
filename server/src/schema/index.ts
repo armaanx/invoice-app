@@ -37,7 +37,7 @@ export const productSchema = object({
     required_error: "Product Name is required",
   })
     .trim()
-    .min(3, "Product Name is required")
+    .min(1, "Product Name is required")
     .max(30, "Product Name should be between 3 and 30 characters"),
   productPrice: number()
     .positive("Product Price is invalid")
