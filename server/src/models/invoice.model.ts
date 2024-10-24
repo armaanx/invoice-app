@@ -1,7 +1,8 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
 export interface IInvoice extends Document {
-  createdBy: string;
+  createdById: string;
+  createdByName: string;
   createdByEmail: string;
   products: {
     productName: string;
@@ -14,10 +15,10 @@ export interface IInvoice extends Document {
 
 const invoiceSchema = new Schema<IInvoice>(
   {
-    createdBy: { type: String, required: true, trim: true },
+    createdById: { type: String, required: true, trim: true },
+    createdByName: { type: String, trim: true },
     createdByEmail: {
       type: String,
-      required: true,
       trim: true,
       lowercase: true,
     },
