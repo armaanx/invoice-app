@@ -14,6 +14,7 @@ import { logout } from "./redux/auth/authSlice";
 import { PublicRoute } from "./components/PublicRoute";
 import PrivateRoute from "./components/PrivateRoute";
 import { Toaster } from "./components/ui/toaster";
+import InvoicePage from "./components/InvoicePage";
 
 function App() {
   const dispatch = useAppDispatch();
@@ -26,7 +27,7 @@ function App() {
         console.log(error);
         dispatch(logout());
       }
-    }, 3 * 60 * 1000);
+    }, 60 * 1000);
 
     return () => clearInterval(interval);
   }, [dispatch]);
@@ -60,10 +61,10 @@ function App() {
           ),
         },
         {
-          path: "/generate",
+          path: "/invoice",
           element: (
             <PrivateRoute>
-              <div>Generate Invoice</div>
+              <InvoicePage />
             </PrivateRoute>
           ),
         },
