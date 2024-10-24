@@ -5,16 +5,16 @@ import {
   RouterProvider,
 } from "react-router-dom";
 import AddProductsPage from "./components/AddProductsPage";
+import InvoicePage from "./components/InvoicePage";
 import Layout from "./components/Layout";
 import LoginPage from "./components/LoginPage";
+import PrivateRoute from "./components/PrivateRoute";
+import { PublicRoute } from "./components/PublicRoute";
 import SignUpPage from "./components/SignUp";
+import { Toaster } from "./components/ui/toaster";
 import { useAppDispatch } from "./hooks/reduxHooks";
 import { checkSession } from "./lib/session";
 import { logout } from "./redux/auth/authSlice";
-import { PublicRoute } from "./components/PublicRoute";
-import PrivateRoute from "./components/PrivateRoute";
-import { Toaster } from "./components/ui/toaster";
-import InvoicePage from "./components/InvoicePage";
 
 function App() {
   const dispatch = useAppDispatch();
