@@ -1,18 +1,17 @@
-import { verifyToken } from "../middleware/auth.middleware.ts";
+import { Router } from "express";
 import {
+  checkSession,
   loginUser,
   logOutUser,
-  refreshAccessToken,
   registerUser,
 } from "../controllers/user.controller.ts";
-import { Router } from "express";
 
 const router = Router();
 
 router.route("/register").post(registerUser);
 router.route("/login").post(loginUser);
 
-router.route("/logout").post(verifyToken, logOutUser);
-router.route("/refresh-token").post(refreshAccessToken);
+router.route("/logout").post(logOutUser);
+router.route("/check-session").get(checkSession);
 
 export default router;
