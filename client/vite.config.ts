@@ -15,6 +15,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
+      cors: { origin: "*" },
       proxy: {
         "/api": {
           target: API_URL,
