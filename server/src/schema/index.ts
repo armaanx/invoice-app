@@ -51,17 +51,14 @@ export const productSchema = object({
 });
 
 export const invoiceSchema = object({
-  createdBy: string({
-    required_error: "Created By Required",
+  createdById: string({
+    required_error: "Id Required",
   })
     .trim()
     .min(3)
     .max(50),
-  createdByEmail: string({
-    required_error: "Created By Email Required",
-  })
-    .email()
-    .trim(),
+  createdByEmail: string().email().trim().nullable(),
+  createdByName: string().trim().nullable(),
   products: array(productSchema).min(1, "Products are required"),
   totalPriceInvoice: number({
     required_error: "Invoice Total Price is Required",
