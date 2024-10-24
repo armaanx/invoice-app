@@ -1,4 +1,4 @@
-import { object, string } from "zod";
+import { array, number, object, string } from "zod";
 
 export const userRegisterSchema = object({
   name: string({
@@ -30,4 +30,42 @@ export const userLoginSchema = object({
   password: string({
     required_error: "Password is required",
   }).min(8, "Password must be at least 8 characters long"),
+});
+
+export const productSchema = object({
+  productName: string({
+    required_error: "Product Name is required",
+  })
+    .trim()
+    .min(3, "Product Name is required")
+    .max(30, "Product Name should be between 3 and 30 characters"),
+  productPrice: number()
+    .positive("Product Price is invalid")
+    .min(0.01, "Product Price should be greater than 0"),
+  productQuantity: number()
+    .positive("Product Quantity is invalid")
+    .min(1, "Product Quantity should be greater than 0"),
+  totalPrice: number()
+    .positive("Total Price is invalid")
+    .min(0.01, "Total Price should be greater than 0"),
+});
+
+export const invoiceSchema = object({
+  createdBy: string({
+    required_error: "Created By Required",
+  })
+    .trim()
+    .min(3)
+    .max(50),
+  createdByEmail: string({
+    required_error: "Created By Email Required",
+  })
+    .email()
+    .trim(),
+  products: array(productSchema).min(1, "Products are required"),
+  totalPriceInvoice: number({
+    required_error: "Invoice Total Price is Required",
+  })
+    .positive("Total Price is invalid")
+    .min(0.01, "Total Price should be greater than 0"),
 });
