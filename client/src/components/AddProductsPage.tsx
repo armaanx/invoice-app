@@ -65,7 +65,7 @@ const AddProductsPage = () => {
         createdByName: null,
         createdByEmail: null,
         products,
-        totalPriceInvoice: totalPrice + totalPrice * 0.18,
+        totalPriceInvoice: totalPrice,
       };
       const pdf = await generateInvoice(payload);
       dispatch(setPdf(pdf));
