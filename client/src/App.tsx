@@ -1,10 +1,35 @@
-import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import SignUpPage from "./components/SignUp";
-import LoginPage from "./components/LoginPage";
-import Layout from "./components/Layout";
+import { useEffect } from "react";
+import {
+  createBrowserRouter,
+  Navigate,
+  RouterProvider,
+} from "react-router-dom";
 import AddProductsPage from "./components/AddProductsPage";
+import Layout from "./components/Layout";
+import LoginPage from "./components/LoginPage";
+import SignUpPage from "./components/SignUp";
+import { useAppDispatch } from "./hooks/reduxHooks";
+import { checkSession } from "./lib/session";
+import { logout } from "./redux/auth/authSlice";
+import { PublicRoute } from "./components/PublicRoute";
+import PrivateRoute from "./components/PrivateRoute";
+import { Toaster } from "./components/ui/toaster";
 
 function App() {
+  const dispatch = useAppDispatch();
+
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        await checkSession();
+      } catch (error) {
+        console.log(error);
+        dispatch(logout());
+      }
+    }, 3 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [dispatch]);
   const router = createBrowserRouter([
     {
       path: "/",
@@ -12,32 +37,54 @@ function App() {
       children: [
         {
           path: "/login",
-          element: <LoginPage />,
+          element: (
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          ),
         },
         {
           path: "/register",
-          element: <SignUpPage />,
+          element: (
+            <PublicRoute>
+              <SignUpPage />
+            </PublicRoute>
+          ),
         },
         {
           path: "/products",
-          element: <AddProductsPage />,
+          element: (
+            <PrivateRoute>
+              <AddProductsPage />
+            </PrivateRoute>
+          ),
         },
         {
           path: "/generate",
-          element: <div>Generate Invoice</div>,
+          element: (
+            <PrivateRoute>
+              <div>Generate Invoice</div>
+            </PrivateRoute>
+          ),
         },
         {
           path: "/",
-          element: <div>Home</div>,
+          element: <Navigate to="/products" replace />,
         },
         {
           path: "*",
-          element: <div>Login</div>,
+          element: <Navigate to="/login" replace />,
         },
       ],
     },
   ]);
-  return <RouterProvider router={router} />;
+
+  return (
+    <>
+      <RouterProvider router={router} />
+      <Toaster />
+    </>
+  );
 }
 
 export default App;
