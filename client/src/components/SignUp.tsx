@@ -1,3 +1,4 @@
+import api from "@/api/api";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -12,10 +13,12 @@ import { Input } from "@/components/ui/input";
 import { RegisterFormSchema } from "@/zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { z } from "zod";
 
 const SignUpPage = () => {
+  //const { error, loading, accessToken } = useAppSelector((state) => state.auth);
+  const navigate = useNavigate();
   const form = useForm<z.infer<typeof RegisterFormSchema>>({
     resolver: zodResolver(RegisterFormSchema),
     defaultValues: {
@@ -24,11 +27,17 @@ const SignUpPage = () => {
       password: "",
     },
   });
-  function onSubmit(values: z.infer<typeof RegisterFormSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
+  async function onSubmit(values: z.infer<typeof RegisterFormSchema>) {
     console.log(values);
+    try {
+      await api.post("/auth/register", values);
+      console.log("Registered successfully");
+      navigate("/login");
+    } catch (error) {
+      console.log(error);
+    }
   }
+
   return (
     <div className="min-h-screen bg-zinc-900 flex items-center justify-center  relative overflow-hidden pt-24 pb-12 antialiased px-12 xl:px-0 ">
       {/* background */}
