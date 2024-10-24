@@ -1,3 +1,4 @@
+import api from "@/api/api";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -9,6 +10,9 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useAppDispatch } from "@/hooks/reduxHooks";
+import { useToast } from "@/hooks/use-toast";
+import { login } from "@/redux/auth/authSlice";
 import { LoginFormSchema } from "@/zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -16,6 +20,8 @@ import { Link } from "react-router-dom";
 import { z } from "zod";
 
 const LoginPage = () => {
+  const dispatch = useAppDispatch();
+  const toast = useToast();
   const form = useForm<z.infer<typeof LoginFormSchema>>({
     resolver: zodResolver(LoginFormSchema),
     defaultValues: {
@@ -23,8 +29,17 @@ const LoginPage = () => {
       password: "",
     },
   });
-  function onSubmit(values: z.infer<typeof LoginFormSchema>) {
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof LoginFormSchema>) {
+    try {
+      const res = await api.post("/auth/login", values);
+      dispatch(login(res.data.userId));
+    } catch {
+      toast.toast({
+        title: "Login Failed",
+        description: "Please check your credentials",
+        variant: "destructive",
+      });
+    }
   }
   return (
     <div className="min-h-screen bg-zinc-900 flex items-center justify-center pt-20 pb-8  relative overflow-hidden  antialiased px-12 xl:px-0">
@@ -60,7 +75,6 @@ const LoginPage = () => {
                     </FormLabel>
                     <FormControl>
                       <Input
-                        type="password"
                         placeholder="Enter Email Address"
                         {...field}
                         className="bg-zinc-800/50 border-zinc-700 text-white py-7 rounded-sm"
