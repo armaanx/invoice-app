@@ -6,67 +6,28 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
+import { useAppDispatch, useAppSelector } from "@/hooks/reduxHooks";
+import { useToast } from "@/hooks/use-toast";
+import { addProduct } from "@/redux/products/productSlice";
 import { AddProductsFormSchema } from "@/zod";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useState } from "react";
+import { CirclePlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { DataTable } from "./AddProductsPageTable/DataTable";
 import { columns } from "./AddProductsPageTable/columns";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { CirclePlus } from "lucide-react";
-import { ScrollArea } from "./ui/scroll-area";
-
-export interface Product {
-  productName: string;
-  productPrice: number;
-  productQuantity: number;
-  totalPrice: number;
-}
-
-// const dummy: Product[] = [
-//   {
-//     productName: "Food",
-//     productPrice: 100,
-//     productQuantity: 1,
-//     totalPrice: 100,
-//   },
-//   {
-//     productName: "Book",
-//     productPrice: 200,
-//     productQuantity: 2,
-//     totalPrice: 400,
-//   },
-//   {
-//     productName: "Car",
-//     productPrice: 300,
-//     productQuantity: 3,
-//     totalPrice: 900,
-//   },
-//   {
-//     productName: "Phone",
-//     productPrice: 400,
-//     productQuantity: 4,
-//     totalPrice: 1600,
-//   },
-//   {
-//     productName: "Computer",
-//     productPrice: 500,
-//     productQuantity: 5,
-//     totalPrice: 2500,
-//   },
-//   {
-//     productName: "Laptop",
-//     productPrice: 600,
-//     productQuantity: 6,
-//     totalPrice: 3600,
-//   },
-// ];
+import { useNavigate } from "react-router-dom";
+import { generateInvoice, InvoiceType } from "@/lib/invoiceUtils";
+import { setPdf } from "@/redux/pdf/pdfSlice";
 
 const AddProductsPage = () => {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [totalPrice, setTotalPrice] = useState<number>(0);
+  const navigate = useNavigate();
+  const toast = useToast();
+  const dispatch = useAppDispatch();
+  const { userId } = useAppSelector((state) => state.auth);
+  const { products, totalPrice } = useAppSelector((state) => state.products);
   const form = useForm<z.infer<typeof AddProductsFormSchema>>({
     resolver: zodResolver(AddProductsFormSchema),
     defaultValues: {
@@ -76,31 +37,47 @@ const AddProductsPage = () => {
     },
   });
   function onSubmit(values: z.infer<typeof AddProductsFormSchema>) {
-    const exisitingProduct = products.find(
-      (product) => product.productName === values.productName
-    );
-    if (exisitingProduct) {
-      console.log("Product already exists");
+    const newProduct = {
+      productName:
+        values.productName[0].toUpperCase() + values.productName.slice(1),
+      productPrice: Number(values.productPrice),
+      productQuantity: Number(values.productQuantity),
+      totalPrice: Number(values.productPrice) * Number(values.productQuantity),
+    };
+    if (
+      products.find((product) => product.productName === values.productName)
+    ) {
+      toast.toast({
+        title: "Product with the same name already exists",
+        variant: "destructive",
+      });
       return;
     }
-    setProducts((prevProducts) => [
-      ...prevProducts,
-      {
-        productName: values.productName,
-        productPrice: Number(values.productPrice),
-        productQuantity: Number(values.productQuantity),
-        totalPrice:
-          Number(values.productPrice) * Number(values.productQuantity),
-      },
-    ]);
-    setTotalPrice(
-      (prevTotalPrice) =>
-        prevTotalPrice +
-        Number(values.productPrice) * Number(values.productQuantity)
-    );
+    dispatch(addProduct(newProduct));
+  }
 
-    console.log(products);
-    console.log(values);
+  async function handleGenerate(e: React.MouseEvent<HTMLButtonElement>) {
+    e.preventDefault();
+    try {
+      toast.toast({ title: "Generating Invoice..." });
+      const payload: InvoiceType = {
+        createdById: userId!,
+        createdByName: null,
+        createdByEmail: null,
+        products,
+        totalPriceInvoice: totalPrice + totalPrice * 0.18,
+      };
+      const pdf = await generateInvoice(payload);
+      dispatch(setPdf(pdf));
+      navigate("/invoice");
+    } catch (error) {
+      console.log(error);
+      toast.toast({
+        title: "Something went wrong",
+        description: "Please try again later",
+        variant: "destructive",
+      });
+    }
   }
   return (
     <div className="min-h-screen bg-zinc-900 flex flex-col items-start justify-start relative overflow-hidden pt-32 pb-12 antialiased px-6 md:px-12 xl:px-3 w-full">
@@ -192,8 +169,10 @@ const AddProductsPage = () => {
           />
         </div>
         <Button
+          disabled={products.length === 0}
           className="bg-stone-800 hover:text-lime-600 text-lime-500 w-fit"
           size={"lg"}
+          onClick={handleGenerate}
         >
           Generate PDF Invoice
         </Button>
